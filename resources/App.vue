@@ -34,7 +34,7 @@
                         name="userSearch"
                         id="userSearch"
                         v-model="userSearch"
-                        @change="filterUser"
+                        @change="globalFilter"
                     >
                       <option value="0"></option>
                       <option v-for="user in users" v-bind:key="user.id" :value="user.id">
@@ -47,7 +47,7 @@
                         name="typeSearch"
                         id="typeSearch"
                         v-model="typeSearch"
-                        @change="filterType"
+                        @change="globalFilter"
                     >
                       <option value="0"></option>
                       <option v-for="type in propertyTypes" v-bind:key="type.id" :value="type.id">
@@ -60,14 +60,14 @@
                         name="fromSearchMin"
                         id="fromSearchMin"
                         v-model="fromSearchMin"
-                        @change="filterFrom"
+                        @change="globalFilter"
                     >
                     to
                     <input type="date"
                         name="fromSearchMax"
                         id="fromSearchMax"
                         v-model="fromSearchMax"
-                        @change="filterFrom"
+                        @change="globalFilter"
                     >
                 </td>
                 <td>
@@ -75,14 +75,14 @@
                         name="toSearchMin"
                         id="toSearchMin"
                         v-model="toSearchMin"
-                        @change="filterTo"
+                        @change="globalFilter"
                     >
                     to
                     <input type="date"
                         name="toSearchMax"
                         id="toSearchMax"
                         v-model="toSearchMax"
-                        @change="filterTo"
+                        @change="globalFilter"
                     >
                 </td>
                 <td>
@@ -130,7 +130,7 @@
                     }}
                 </td>
                 <td>
-                    {{ monthDifferente(property) }}
+                    {{ monthDifferent(property) }}
                 </td>
             </tr>
         </tbody>
@@ -157,7 +157,7 @@ export default {
     toSearchMax: null,
   }),
   methods: {
-    monthDifferente(propertyId) {
+    monthDifferent(propertyId) {
       const endDate = propertyId.rentedTo;
       const startDate = propertyId.rentedFrom;
 
@@ -170,59 +170,50 @@ export default {
       const totalMonths = yearsInMonthsDiff + onlyMonthsDiff;
       return totalMonths;
     },
-    filterUser() {
-      const userId = parseInt(this.userSearch, 10);
-      if (userId !== 0) {
-        this.showProperties = properties.filter((property) => property.userId === userId);
-      } else {
-        this.showProperties = properties;
-      }
-    },
-    filterType() {
-      const typeId = parseInt(this.typeSearch, 10);
-      if (typeId !== 0) {
-        this.showProperties = properties.filter((property) => property.typeId === typeId);
-      } else {
-        this.showProperties = properties;
-      }
-    },
-    filterFrom() {
-      let minDate = null;
-      let maxDate = null;
-      if (this.fromSearchMin !== null && this.fromSearchMin !== '') {
-        minDate = new Date(this.fromSearchMin);
-      }
-      if (this.fromSearchMax !== null && this.fromSearchMax !== '') {
-        maxDate = new Date(this.fromSearchMax);
-      }
+    globalFilter() {
+      this.showProperties = properties.filter((property) => {
+        const userId = parseInt(this.userSearch, 10);
+        if (userId !== 0 && userId !== property.userId) {
+          return false;
+        }
 
-      if (minDate !== null && maxDate !== null) {
-        this.showProperties = properties.filter((property) => {
-          const from = property.rentedFrom;
-          return minDate <= from && from <= maxDate;
-        });
-      } else {
-        this.showProperties = properties;
-      }
-    },
-    filterTo() {
-      let minDate = null;
-      let maxDate = null;
-      if (this.toSearchMin !== null && this.toSearchMin !== '') {
-        minDate = new Date(this.toSearchMin);
-      }
-      if (this.toSearchMax !== null && this.toSearchMax !== '') {
-        maxDate = new Date(this.toSearchMax);
-      }
+        const typeId = parseInt(this.typeSearch, 10);
+        if (typeId !== 0 && typeId !== property.typeId) {
+          return false;
+        }
 
-      if (minDate !== null && maxDate !== null) {
-        this.showProperties = properties.filter((property) => {
-          const from = property.rentedTo;
-          return minDate <= from && from <= maxDate;
-        });
-      } else {
-        this.showProperties = properties;
-      }
+        let minDate = null;
+        let maxDate = null;
+        if (this.fromSearchMin !== null && this.fromSearchMin !== '') {
+          minDate = new Date(this.fromSearchMin);
+        }
+        if (this.fromSearchMax !== null && this.fromSearchMax !== '') {
+          maxDate = new Date(this.fromSearchMax);
+        }
+
+        if (minDate !== null && maxDate !== null) {
+          if (!(minDate <= property.rentedFrom && property.rentedFrom <= maxDate)) {
+            return false;
+          }
+        }
+
+        minDate = null;
+        maxDate = null;
+        if (this.toSearchMin !== null && this.toSearchMin !== '') {
+          minDate = new Date(this.toSearchMin);
+        }
+        if (this.toSearchMax !== null && this.toSearchMax !== '') {
+          maxDate = new Date(this.toSearchMax);
+        }
+
+        if (minDate !== null && maxDate !== null) {
+          if (!(minDate <= property.rentedTo && property.rentedTo <= maxDate)) {
+            return false;
+          }
+        }
+
+        return true;
+      });
     },
   },
   mounted() {
