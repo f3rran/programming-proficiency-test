@@ -16,7 +16,14 @@ class Bakery
     {
         $numberOfCakes = 0;
 
-        // Complete the function
+        $max_per_ingredient = array();
+        foreach ($recipe as $key => $recipeIngredient) {
+            if($ingredients[$key] ?? false)
+                array_push($max_per_ingredient, intdiv($ingredients[$key], $recipeIngredient));
+            else
+                return 0;
+        }
+        $numberOfCakes = min($max_per_ingredient);
 
         return $numberOfCakes;
     }
